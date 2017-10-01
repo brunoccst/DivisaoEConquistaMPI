@@ -49,7 +49,7 @@ int main()
     return 0;
 }
 
-Rotina de Intercalação
+/*Rotina de Intercalação*/
 
 /* recebe um ponteiro para um vetor que contem as mensagens recebidas dos filhos e            */
 /* intercala estes valores em um terceiro vetor auxiliar. Devolve um ponteiro para este vetor */          */
@@ -75,9 +75,8 @@ int *interleaving(int vetor[], int tam)
 	return vetor_auxiliar;
 }
 
-Chamada para a rotina de Intercalação
+/* Chamada para a rotina de Intercalação */
 
-int *vetor_auxiliar;         /* ponteiro para o vetor resultantes que sera alocado dentro da rotina */
+//int *vetor_auxiliar;         /* ponteiro para o vetor resultantes que sera alocado dentro da rotina */
 
-vetor_aux = interleaving(vetor, tam);
-
+//vetor_aux = interleaving(vetor, tam);
