@@ -35,8 +35,7 @@ int *interleaving(int vetor[], int tam)
 	i2 = tam / 2;
 
 	for (i_aux = 0; i_aux < tam; i_aux++) {
-		if (((vetor[i1] <= vetor[i2]) && (i1 < (tam / 2)))
-		    || (i2 == tam))
+		if ( ( (vetor[i1] <= vetor[i2]) && (i1 < (tam / 2)) ) || (i2 == tam) )
 			vetor_auxiliar[i_aux] = vetor[i1++];
 		else
 			vetor_auxiliar[i_aux] = vetor[i2++];
@@ -85,9 +84,9 @@ int main ( int argc , char **argv )
         //Inicializacoes
         if(my_rank == 0) // RAIZ
         {
-            time1 = MPI_Wtime( );
+            time1 = MPI_Wtime();
             printf ( "\n" ) ;
-            // Preenche o v e t o r
+            // Preenche o vetor
             for( i =0; i<ARRAY_SIZE; i++)
             {
                 LINHA[ i ] = ARRAY_SIZE-i-1;
@@ -107,25 +106,25 @@ int main ( int argc , char **argv )
         {
             // Antecipa recebimento da mensagem
             MPI_Probe (MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-            // Tamanho do v e t o r r e c e b i d o
-            // ( f o i a p r o v e i t a d o o campo TAG do MPI, que nao s e r i a u t i l i z a d o )
+            // Tamanho do vetor recebido
+            // ( foi aproveitado o campo TAG do MPI, que nao seria utilizado )
             int TAMANHO = status.MPI_TAG;
             int METADETAMANHO = TAMANHO/ 2 ;
-            // Numero do proc e s so pai
+            // Numero do processo pai
             int SOURCE_NUMBER = status.MPI_SOURCE;
             MPI_Recv(LINHA, TAMANHO, MPI_INT, SOURCE_NUMBER, TAMANHO, MPI_COMM_WORLD, &status);
 
             if ( delta > TAMANHO){
-                // Vetor maior do que o v a l o r de d e l t a
-                // Divide a l i s t a p e l a metade e manda para os f i l h o s
+                // Vetor maior do que o valor de delta
+                // Divide a lista pela metade e manda para os filhos
                 MPI_Send(&LINHA[ 0 ] , METADETAMANHO, MPI_INT, FILHO1_NUMBER, METADETAMANHO, MPI_COMM_WORLD);
                 MPI_Send(&LINHA[METADETAMANHO] , METADETAMANHO, MPI_INT, FILHO2_NUMBER, METADETAMANHO, MPI_COMM_WORLD);
                 // Recebe de volta os vetores ordenados
                 MPI_Recv(&LINHA[ 0 ] , METADETAMANHO, MPI_INT, FILHO1_NUMBER, METADETAMANHO, MPI_COMM_WORLD, &status);
                 MPI_Recv(&LINHA[METADETAMANHO] , METADETAMANHO, MPI_INT, FILHO2_NUMBER, METADETAMANHO, MPI_COMM_WORLD, &status);
-                // I n t e r c a l a v e t o r e s
+                // Intercala vetores
                 int *LINHA_INTERCALADA = interleaving(LINHA, TAMANHO);
-                // Manda o v e t o r ordenado de v o l t a para o proc e s so pai
+                // Manda o vetor ordenado de volta para o processo pai
                 MPI_Send (LINHA_INTERCALADA, TAMANHO, MPI_INT, SOURCE_NUMBER, TAMANHO, MPI_COMM_WORLD);
             }
             else
@@ -136,7 +135,7 @@ int main ( int argc , char **argv )
                 MPI_Send(LINHA, TAMANHO, MPI_INT, SOURCE_NUMBER, TAMANHO, MPI_COMM_WORLD) ;
             }
         }
-        MPI_Finalize ( ) ;
+        MPI_Finalize( );
     }
 }
 
@@ -149,4 +148,4 @@ int main ( int argc , char **argv )
 
 //int *vetor_auxiliar;         /* ponteiro para o vetor resultantes que sera alocado dentro da rotina */
 
-//vetor_aux = interleaving(vetor, tam);
+//vetor_auxiliar = interleaving(vetor, tam);
