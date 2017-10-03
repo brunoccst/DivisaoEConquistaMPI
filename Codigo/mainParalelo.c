@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include "mpi.h"
 
-#define DEBUG 1            // comentar esta linha quando for medir tempo
+//#define DEBUG 1            // comentar esta linha quando for medir tempo
 #define ARRAY_SIZE 40      // trabalho final com o valores 10.000, 100.000, 1.000.000
 
 void bs(int n, int * vetor)
@@ -67,30 +67,34 @@ int main ( int argc , char **argv )
     int i = 0 ; // Va r iav e i s a u x i l i a r e s para l o o p s
     int j = 0 ;
     double time1 , time2 ; // Cont role do tempo de execucao
-    int delta = 5;
+    int delta = (int) ARRAY_SIZE*0.25;
     int limit = 1 + ( proc_n / 2 ) ;
-    int FILHO1_NUMBER = 1 + 2*my_rank ;
-    int FILHO2_NUMBER = 2 + 2*my_rank ;
+    int FILHO1_NUMBER = 2*my_rank ;
+    int FILHO2_NUMBER = 1 + 2*my_rank ;
     // Verifica se o delta sera alcancado
-    j = ARRAY_SIZE;
-    for( i = 0; i<limit; i++)
+    //j = ARRAY_SIZE;
+    //for( i = 0; i<limit; i++)
+    //{
+    //    j = j / 2 ;
+    //}
+    //if ( delta < j ){
+    //    printf ( "\nDelta jamais sera alcancado \n" ) ;
+    //    MPI_Finalize( );
+    //}else{
+    //Inicializacoes
+    if(my_rank == 0) // RAIZ
     {
-        j = j / 2 ;
-    }
-    if ( delta < j ){
-        printf ( "\nDelta jamais sera alcancado \n" ) ;
-        MPI_Finalize( );
-    }else{
-        //Inicializacoes
-        if(my_rank == 0) // RAIZ
+        time1 = MPI_Wtime();
+        printf ( "\n" ) ;
+        // Preenche o vetor
+        for( i =0; i<ARRAY_SIZE; i++)
         {
-            time1 = MPI_Wtime();
-            printf ( "\n" ) ;
-            // Preenche o vetor
-            for( i =0; i<ARRAY_SIZE; i++)
-            {
-                LINHA[ i ] = ARRAY_SIZE-i-1;
-            }
+            LINHA[ i ] = ARRAY_SIZE-i-1;
+        }
+
+        if(proc_n == 1){
+            bs(ARRAY_SIZE, LINHA);
+        }else{
             // Manda metades do array para os filhos
             MPI_Send(&LINHA[ 0 ], ARRAY_SIZE/2 , MPI_INT, FILHO1_NUMBER, ARRAY_SIZE/2 , MPI_COMM_WORLD);
             MPI_Send(&LINHA[ARRAY_SIZE/ 2 ] , ARRAY_SIZE/2 , MPI_INT, FILHO2_NUMBER, ARRAY_SIZE/2 , MPI_COMM_WORLD) ;
@@ -99,46 +103,46 @@ int main ( int argc , char **argv )
             MPI_Recv(&LINHA[ARRAY_SIZE/ 2 ] , ARRAY_SIZE/2 , MPI_INT, FILHO2_NUMBER, ARRAY_SIZE/2 , MPI_COMM_WORLD, &status ) ;
             // Interlaca vetores resultantes
             LINHA = interleaving (LINHA, ARRAY_SIZE) ;
-            time2 = MPI_Wtime( ) ; // Acaba a contagem do tempo
-            printf( "Tempo de execucao : %f \n\n" , time2-time1 ) ;
         }
-        else // NODOS INTERMEDIARIOS E FOLHAS
-        {
-            // Antecipa recebimento da mensagem
-            MPI_Probe (MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-            // Tamanho do vetor recebido
-            // ( foi aproveitado o campo TAG do MPI, que nao seria utilizado )
-            int TAMANHO = status.MPI_TAG;
-            int METADETAMANHO = TAMANHO/ 2 ;
-            // Numero do processo pai
-            int SOURCE_NUMBER = status.MPI_SOURCE;
-            MPI_Recv(LINHA, TAMANHO, MPI_INT, SOURCE_NUMBER, TAMANHO, MPI_COMM_WORLD, &status);
+        time2 = MPI_Wtime( ) ; // Acaba a contagem do tempo
+        printf( "Tempo de execucao : %f \n\n" , time2-time1 ) ;
 
-            if ( delta > TAMANHO){
-                // Vetor maior do que o valor de delta
-                // Divide a lista pela metade e manda para os filhos
-                MPI_Send(&LINHA[ 0 ] , METADETAMANHO, MPI_INT, FILHO1_NUMBER, METADETAMANHO, MPI_COMM_WORLD);
-                MPI_Send(&LINHA[METADETAMANHO] , METADETAMANHO, MPI_INT, FILHO2_NUMBER, METADETAMANHO, MPI_COMM_WORLD);
-                // Recebe de volta os vetores ordenados
-                MPI_Recv(&LINHA[ 0 ] , METADETAMANHO, MPI_INT, FILHO1_NUMBER, METADETAMANHO, MPI_COMM_WORLD, &status);
-                MPI_Recv(&LINHA[METADETAMANHO] , METADETAMANHO, MPI_INT, FILHO2_NUMBER, METADETAMANHO, MPI_COMM_WORLD, &status);
-                // Intercala vetores
-                int *LINHA_INTERCALADA = interleaving(LINHA, TAMANHO);
-                // Manda o vetor ordenado de volta para o processo pai
-                MPI_Send (LINHA_INTERCALADA, TAMANHO, MPI_INT, SOURCE_NUMBER, TAMANHO, MPI_COMM_WORLD);
-                MPI_Finalize();
-	    }
-            else
-            {
-                // Delta menor ou igual ao tamanho do vetor
-                // Ordena e devolve ao processo pai
-                bs(TAMANHO, LINHA) ;
-                MPI_Send(LINHA, TAMANHO, MPI_INT, SOURCE_NUMBER, TAMANHO, MPI_COMM_WORLD) ;
-                MPI_Finalize();
-	    }
-        }
-        MPI_Finalize( );
     }
+    else // NODOS INTERMEDIARIOS E FOLHAS
+    {
+        // Antecipa recebimento da mensagem
+        MPI_Probe (MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+        // Tamanho do vetor recebido
+        // ( foi aproveitado o campo TAG do MPI, que nao seria utilizado )
+        int TAMANHO = status.MPI_TAG;
+        int METADETAMANHO = TAMANHO/ 2;
+        // Numero do processo pai
+        int SOURCE_NUMBER = status.MPI_SOURCE;
+        MPI_Recv(LINHA, TAMANHO, MPI_INT, SOURCE_NUMBER, TAMANHO, MPI_COMM_WORLD, &status);
+
+        if ( delta <= TAMANHO && FILHO1_NUMBER <= proc_n && FILHO2_NUMBER <= proc_n){
+            // Vetor maior do que o valor de delta
+            // Divide a lista pela metade e manda para os filhos
+            MPI_Send(&LINHA[ 0 ] , METADETAMANHO, MPI_INT, FILHO1_NUMBER, METADETAMANHO, MPI_COMM_WORLD);
+            MPI_Send(&LINHA[METADETAMANHO] , METADETAMANHO, MPI_INT, FILHO2_NUMBER, METADETAMANHO, MPI_COMM_WORLD);
+            // Recebe de volta os vetores ordenados
+            MPI_Recv(&LINHA[ 0 ] , METADETAMANHO, MPI_INT, FILHO1_NUMBER, METADETAMANHO, MPI_COMM_WORLD, &status);
+            MPI_Recv(&LINHA[METADETAMANHO] , METADETAMANHO, MPI_INT, FILHO2_NUMBER, METADETAMANHO, MPI_COMM_WORLD, &status);
+            // Intercala vetores
+            int *LINHA_INTERCALADA = interleaving(LINHA, TAMANHO);
+            // Manda o vetor ordenado de volta para o processo pai
+            MPI_Send (LINHA_INTERCALADA, TAMANHO, MPI_INT, SOURCE_NUMBER, TAMANHO, MPI_COMM_WORLD);
+        }
+        else
+        {
+            // Delta menor ou igual ao tamanho do vetor
+            // Ordena e devolve ao processo pai
+            bs(TAMANHO, LINHA) ;
+            MPI_Send(LINHA, TAMANHO, MPI_INT, SOURCE_NUMBER, TAMANHO, MPI_COMM_WORLD) ;
+        }
+    }
+    MPI_Finalize( );
+    //}
 }
 
 /*Rotina de Intercalação*/
