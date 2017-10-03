@@ -69,8 +69,8 @@ int main ( int argc , char **argv )
     double time1 , time2 ; // Cont role do tempo de execucao
     int delta = (int) ARRAY_SIZE*0.25;
     int limit = 1 + ( proc_n / 2 ) ;
-    int FILHO1_NUMBER = 2*my_rank ;
-    int FILHO2_NUMBER = 1 + 2*my_rank ;
+    int FILHO1_NUMBER = 1 + 2*my_rank ;
+    int FILHO2_NUMBER = 2 + 2*my_rank ;
     // Verifica se o delta sera alcancado
     //j = ARRAY_SIZE;
     //for( i = 0; i<limit; i++)
@@ -92,7 +92,7 @@ int main ( int argc , char **argv )
             LINHA[ i ] = ARRAY_SIZE-i-1;
         }
 
-        if(proc_n == 1){
+        if(proc_n == 1 || proc_n == 2){
             bs(ARRAY_SIZE, LINHA);
         }else{
             // Manda metades do array para os filhos
@@ -120,7 +120,7 @@ int main ( int argc , char **argv )
         int SOURCE_NUMBER = status.MPI_SOURCE;
         MPI_Recv(LINHA, TAMANHO, MPI_INT, SOURCE_NUMBER, TAMANHO, MPI_COMM_WORLD, &status);
 
-        if ( delta <= TAMANHO && FILHO1_NUMBER <= proc_n && FILHO2_NUMBER <= proc_n){
+        if ( delta <= TAMANHO && FILHO1_NUMBER <= proc_n-1 && FILHO2_NUMBER <= proc_n-1){
             // Vetor maior do que o valor de delta
             // Divide a lista pela metade e manda para os filhos
             MPI_Send(&LINHA[ 0 ] , METADETAMANHO, MPI_INT, FILHO1_NUMBER, METADETAMANHO, MPI_COMM_WORLD);
@@ -138,7 +138,7 @@ int main ( int argc , char **argv )
             // Delta menor ou igual ao tamanho do vetor
             // Ordena e devolve ao processo pai
             bs(TAMANHO, LINHA) ;
-            MPI_Send(LINHA, TAMANHO, MPI_INT, SOURCE_NUMBER, TAMANHO, MPI_COMM_WORLD) ;
+            MPI_Send(&LINHA, TAMANHO, MPI_INT, SOURCE_NUMBER, TAMANHO, MPI_COMM_WORLD) ;
         }
     }
     MPI_Finalize( );
