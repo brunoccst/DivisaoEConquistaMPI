@@ -67,7 +67,7 @@ int main ( int argc , char **argv )
     int i = 0 ; // Va r iav e i s a u x i l i a r e s para l o o p s
     int j = 0 ;
     double time1 , time2 ; // Cont role do tempo de execucao
-    int delta = 25000;
+    int delta = 5;
     int limit = 1 + ( proc_n / 2 ) ;
     int FILHO1_NUMBER = 1 + 2*my_rank ;
     int FILHO2_NUMBER = 2 + 2*my_rank ;
@@ -126,14 +126,16 @@ int main ( int argc , char **argv )
                 int *LINHA_INTERCALADA = interleaving(LINHA, TAMANHO);
                 // Manda o vetor ordenado de volta para o processo pai
                 MPI_Send (LINHA_INTERCALADA, TAMANHO, MPI_INT, SOURCE_NUMBER, TAMANHO, MPI_COMM_WORLD);
-            }
+                MPI_Finalize();
+	    }
             else
             {
                 // Delta menor ou igual ao tamanho do vetor
                 // Ordena e devolve ao processo pai
                 bs(TAMANHO, LINHA) ;
                 MPI_Send(LINHA, TAMANHO, MPI_INT, SOURCE_NUMBER, TAMANHO, MPI_COMM_WORLD) ;
-            }
+                MPI_Finalize();
+	    }
         }
         MPI_Finalize( );
     }
