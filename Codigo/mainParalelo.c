@@ -3,7 +3,7 @@
 #include "mpi.h"
 
 //#define DEBUG 1            // comentar esta linha quando for medir tempo
-#define ARRAY_SIZE 40      // trabalho final com o valores 10.000, 100.000, 1.000.000
+#define ARRAY_SIZE 1000000      // trabalho final com o valores 10.000, 100.000, 1.000.000
 
 void bs(int n, int * vetor)
 {
@@ -68,6 +68,7 @@ int main ( int argc , char **argv )
     int j = 0 ;
     double time1 , time2 ; // Cont role do tempo de execucao
     int delta = (int) ARRAY_SIZE*0.25;
+    //int delta = 500; 
     int limit = 1 + ( proc_n / 2 ) ;
     int FILHO1_NUMBER = 1 + 2*my_rank ;
     int FILHO2_NUMBER = 2 + 2*my_rank ;
@@ -138,7 +139,7 @@ int main ( int argc , char **argv )
             // Delta menor ou igual ao tamanho do vetor
             // Ordena e devolve ao processo pai
             bs(TAMANHO, LINHA) ;
-            MPI_Send(&LINHA, TAMANHO, MPI_INT, SOURCE_NUMBER, TAMANHO, MPI_COMM_WORLD) ;
+            MPI_Send(LINHA, TAMANHO, MPI_INT, SOURCE_NUMBER, TAMANHO, MPI_COMM_WORLD) ;
         }
     }
     MPI_Finalize( );
